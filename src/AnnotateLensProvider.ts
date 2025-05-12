@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { Annotation } from "./Annotation";
 import { AnnotationLens } from "./AnnotationLens";
 import { SymbolInfo } from "./SymbolInfo";
+import { getImplementDecoration, getOverrideDecoration } from "./decorations";
 
 export class AnnotationLensProvider
   implements vscode.CodeLensProvider<AnnotationLens>
@@ -16,6 +17,8 @@ export class AnnotationLensProvider
 
     const goSymbols = await this.getGoSymbols(document);
 
+    const decorationLocations: vscode.Range[] = [];
+
     const results: AnnotationLens[] = [];
     for (const goSymbol of goSymbols) {
       const symbolInfo = await SymbolInfo.create(goSymbol);
@@ -28,6 +31,14 @@ export class AnnotationLensProvider
 
       const annotation = new Annotation(symbolInfo.symbol, symbols);
       results.push(new AnnotationLens(annotation));
+
+      const decorationRange = new vscode.Range(
+        symbolInfo.symbol.location.range.start,
+        symbolInfo.symbol.location.range.start,
+      );
+      decorationLocations.push(
+        decorationRange,
+      );
 
       for (const child of symbolInfo.symbol.children ?? []) {
         if (child.kind !== vscode.SymbolKind.Method) {
@@ -60,14 +71,27 @@ export class AnnotationLensProvider
       }
     }
 
+    activeEditor.setDecorations(
+      getImplementDecoration(),
+      decorationLocations,
+    );
+
+
     return results;
   }
 
   private async getSymbolLocations(te: vscode.TextEditor, si: SymbolInfo): Promise<vscode.Location[]> {
+    let position = si.symbol.location.range.start;
+    if (si.symbol.kind === vscode.SymbolKind.Method) {
+      position = new vscode.Position(
+        si.symbol.selectionRange.start.line,
+        si.symbol.selectionRange.start.character + 1,
+      );
+    }
     return vscode.commands.executeCommand<vscode.Location[]>(
       "vscode.executeImplementationProvider",
       te.document.uri,
-      si.symbol.location.range.start
+      position,
     );
   }
 
