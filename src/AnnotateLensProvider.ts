@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { Annotation } from "./Annotation";
 import { AnnotationLens } from "./AnnotationLens";
 import { SymbolInfo } from "./SymbolInfo";
-import { getImplementDecoration, getOverrideDecoration } from "./decorations";
+import { getImplementDecoration } from "./decorations";
 
 export class AnnotationLensProvider
   implements vscode.CodeLensProvider<AnnotationLens>
