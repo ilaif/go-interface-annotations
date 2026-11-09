@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export class SymbolInfo {
   public readonly symbol: vscode.SymbolInformation & vscode.DocumentSymbol;
@@ -15,9 +15,9 @@ export class SymbolInfo {
   ): Promise<vscode.SymbolInformation & vscode.DocumentSymbol> {
     const documentSymbols = (await vscode.commands.executeCommand<
       (vscode.SymbolInformation & vscode.DocumentSymbol)[]
-    >("vscode.executeDocumentSymbolProvider", location.uri))!;
+    >('vscode.executeDocumentSymbolProvider', location.uri))!;
     return documentSymbols.find((documentSymbol) =>
-      documentSymbol.range.start.isEqual(location.range.start)
+      documentSymbol.range.contains(location.range)
     ) as vscode.SymbolInformation & vscode.DocumentSymbol;
   }
 
@@ -29,9 +29,10 @@ export class SymbolInfo {
     if (
       this.symbol.kind !== vscode.SymbolKind.Class &&
       this.symbol.kind !== vscode.SymbolKind.Struct &&
-      this.symbol.kind !== vscode.SymbolKind.Interface
+      this.symbol.kind !== vscode.SymbolKind.Interface &&
+      this.symbol.kind !== vscode.SymbolKind.Method
     ) {
-      throw new Error("Expected struct or interface");
+      throw new Error('Expected struct or interface');
     }
   }
 }
